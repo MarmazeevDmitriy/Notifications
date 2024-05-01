@@ -1,21 +1,29 @@
 package com.example.notifications;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
 
+import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+
+import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity {
     public static final String CHANNEL_ID = "";
     Button button;
 
+    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,13 +55,23 @@ public class MainActivity extends AppCompatActivity {
         //    }
         //});
 
-        startNotificationService();
+        //startNotificationService();
+
+        ActivityResultLauncher<String[]> multiPermissionLauncher =
+                registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
+                        callback -> {
+                            Log.d("PermissionGrant", "Permission is" + callback.toString());
+                        });
+
+        multiPermissionLauncher.launch(new String[]{android.Manifest.permission.POST_NOTIFICATIONS, Manifest.permission.SCHEDULE_EXACT_ALARM, Manifest.permission.RECEIVE_BOOT_COMPLETED});
+
+        Notificator.scheduleNotification(this, Calendar.getInstance());
     }
 
-    private void startNotificationService() {
-        // Создание интента для запуска службы
-        Intent serviceIntent = new Intent(this, NotificationSchedulerService.class);
-        // Запуск службы
-        startService(serviceIntent);
-    }
+    //private void startNotificationService() {
+    //    // Создание интента для запуска службы
+    //    Intent serviceIntent = new Intent(this, NotificationSchedulerService.class);
+    //    // Запуск службы
+    //    startService(serviceIntent);
+    //}
 }
