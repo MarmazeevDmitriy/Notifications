@@ -1,6 +1,7 @@
 package com.example.notifications;
 
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
 import android.app.AlarmManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -17,6 +18,7 @@ import androidx.core.app.NotificationManagerCompat;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.List;
 
 public class Notificator {
     @SuppressLint("ScheduleExactAlarm")
@@ -30,7 +32,7 @@ public class Notificator {
         int lastNotificationHour = CalendarSharedPreferences.loadLastNotificationHour(context);
 
         if(calendar == null || calendar.getTimeInMillis() == 0){
-            calendar = newCalendar;
+            calendar = Calendar.getInstance();
             Log.d("Date", "New Calendar");
             Log.d("Date", logCurrentTime(calendar));
         } else if (newCalendar != null) {
@@ -56,7 +58,7 @@ public class Notificator {
 
         switch (lastNotificationHour){
             case -1:
-                int[] notificationHours = {6, 12, 18, 24};
+                int[] notificationHours = {4, 8, 12, 16, 20, 24};
                 int currentHour = calendar.get(Calendar.HOUR_OF_DAY);
                 Log.d("Date", Integer.toString(calendar.get(Calendar.HOUR_OF_DAY)));
                 for (int hour : notificationHours) {
@@ -71,15 +73,23 @@ public class Notificator {
                 lastNotificationHour = 6;
                 Log.d("Date", "6 hours next");
                 break;
-            case 6:
+            case 4:
+                lastNotificationHour = 8;
+                Log.d("Date", "8 hours next");
+                break;
+            case 8:
                 lastNotificationHour = 12;
                 Log.d("Date", "12 hours next");
                 break;
             case 12:
-                lastNotificationHour = 18;
-                Log.d("Date", "18 hours next");
+                lastNotificationHour = 16;
+                Log.d("Date", "16 hours next");
                 break;
-            case 18:
+            case 16:
+                lastNotificationHour = 20;
+                Log.d("Date", "20 hours next");
+                break;
+            case 20:
                 lastNotificationHour = 0;
                 Log.d("Date", "0 hours next");
                 break;
@@ -107,11 +117,18 @@ public class Notificator {
     public static void sendNotification(Context context) {
         createNotificationChannel(context);
 
+        // Создаем Intent для открытия MainActivity при нажатии на уведомление
+        Intent intent = new Intent(context, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, MainActivity.CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle("Notification")
                 .setContentText("This is your notification content")
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setContentIntent(pendingIntent) // Устанавливаем PendingIntent
+                .setAutoCancel(true); // Уведомление будет автоматически удаляться при нажатии
 
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify(0, builder.build());
@@ -133,11 +150,26 @@ public class Notificator {
     public static class NotificationReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            // После получения уведомления, отправляем его
-            sendNotification(context);
+            if (!isAppInForeground(context)) {
+                // Отправить уведомление, если приложение не активно
+                sendNotification(context);
+            }
             // Переустанавливаем следующее уведомление (если нужно)
             scheduleNotification(context, null);
         }
+    }
+
+    public static boolean isAppInForeground(Context context) {
+        ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningAppProcessInfo> runningProcesses = activityManager.getRunningAppProcesses();
+        if (runningProcesses != null) {
+            for (ActivityManager.RunningAppProcessInfo processInfo : runningProcesses) {
+                if (processInfo.processName.equals(context.getPackageName())) {
+                    return processInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
+                }
+            }
+        }
+        return false;
     }
 
     public static String logCurrentTime(Calendar calendar) {
