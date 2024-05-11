@@ -48,23 +48,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        //    CharSequence name = getString(R.string.channel_name);
-        //    String description = getString(R.string.channel_description);
-        //    int importance = NotificationManager.IMPORTANCE_DEFAULT;
-        //    NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
-        //    channel.setDescription(description);
-        //
-        //    NotificationManager notificationManager = getSystemService(NotificationManager.class);
-        //    notificationManager.createNotificationChannel(channel);
-        //}
-        //
-        //NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-        //        .setSmallIcon(R.drawable.ic_launcher_foreground)
-        //        .setContentTitle("NITIFICATION!!!")
-        //        .setContentText("BLA BLA BLA")
-        //        .setPriority(NotificationCompat.PRIORITY_DEFAULT);
-        //
         button = findViewById(R.id.button);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -72,8 +55,6 @@ public class MainActivity extends AppCompatActivity {
                 Notificator.sendNotification(getApplicationContext());
             }
         });
-
-        //startNotificationService();
 
         ActivityResultLauncher<String[]> multiPermissionLauncher =
                 registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
@@ -213,11 +194,4 @@ public class MainActivity extends AppCompatActivity {
 
         return Bitmap.createBitmap(bitmap, deltaX, deltaY, newSize, newSize, matrix, true);
     }
-
-    //private void startNotificationService() {
-    //    // Создание интента для запуска службы
-    //    Intent serviceIntent = new Intent(this, NotificationSchedulerService.class);
-    //    // Запуск службы
-    //    startService(serviceIntent);
-    //}
 }
